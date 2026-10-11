@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI相場分析 Pro Ver.1.0</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,sans-serif;background:#0c1320;color:#e7edf7}*{box-sizing:border-box}body{margin:0;padding:18px;max-width:1100px;margin-inline:auto}header{display:flex;justify-content:space-between;align-items:center;gap:12px}h1{font-size:1.35rem;margin:12px 0}h2{font-size:1rem;margin:0 0 12px}.pill{background:#233149;color:#bcd4ff;border-radius:99px;padding:7px 11px;font-size:.75rem}.notice{background:#32271c;color:#ffdc9e;border:1px solid #6b4a24;padding:12px;border-radius:12px;margin:14px 0;font-size:.85rem}.panel{background:#141e2e;border:1px solid #29384d;border-radius:16px;padding:16px;margin:14px 0}.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.toolbar button{border:1px solid #40516a;background:#202e43;color:#dfe9f8;padding:10px 13px;border-radius:10px;cursor:pointer}.toolbar button.active{background:#2563eb;border-color:#60a5fa;color:white}.price{font-size:1.9rem;font-weight:750;font-variant-numeric:tabular-nums;margin:14px 0 3px}.muted{color:#9eacc2;font-size:.85rem}.chart-wrap{width:100%;overflow:hidden}canvas{width:100%;height:360px;display:block}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.stat{padding:13px;background:#1c293b;border-radius:12px}.stat strong{display:block;font-size:1.15rem;margin-top:7px}.up{color:#5fe0a5}.down{color:#ff8490}p{line-height:1.7}footer{font-size:.78rem;color:#94a3b8;margin:25px 0}@media(max-width:520px){body{padding:12px}canvas{height:290px}.grid{grid-template-columns:1fr}h1{font-size:1.1rem}}
+</style>
+</head>
+<body>
+<header><h1>AI相場分析 Pro <span class="muted">Ver.1.0</span></h1><span class="pill">試作版</span></header>
+<div class="notice"><strong>デモデータを表示中</strong> — 実際の為替レートではありません。売買判断には使用しないでください。</div>
+<section class="panel">
+<div class="toolbar"><strong>EUR/JPY</strong><span class="muted">ユーロ／円</span></div>
+<div class="price" id="price">--.---</div><div class="muted" id="summary">サンプルチャート</div>
+<div class="toolbar" style="margin:18px 0 8px" id="timeframes">
+<button data-tf="5分" class="active">5分</button><button data-tf="15分">15分</button><button data-tf="30分">30分</button><button data-tf="1時間">1時間</button><button data-tf="4時間">4時間</button><button data-tf="日足">日足</button>
+</div>
+<div class="chart-wrap"><canvas id="chart" role="img" aria-label="EURJPYのサンプルローソク足チャート"></canvas></div>
+<div class="muted">緑：陽線 ／ 赤：陰線。表示値はすべて架空のサンプルです。</div>
+</section>
+<section class="panel"><h2>チャート情報（デモ）</h2><div class="grid"><div class="stat"><span class="muted">直近の高値</span><strong id="high">--</strong></div><div class="stat"><span class="muted">直近の安値</span><strong id="low">--</strong></div></div></section>
+<section class="panel"><h2>AI相場分析（今後実装）</h2><p>エリオット波動、一目均衡表、フィボナッチ、サイクル理論を組み合わせた日本語分析を追加する予定です。</p><p class="muted">この試作版にはAI推論・実データ取得・自動売買機能はありません。</p></section>
+<footer>© AI相場分析 Pro — Prototype / Not financial advice</footer>
+<script>
+const canvas=document.getElementById('chart'),ctx=canvas.getContext('2d');let selected='5分';
+function series(tf){const seed=['5分','15分','30分','1時間','4時間','日足'].indexOf(tf)+1;let p=180.2+seed*.22;const a=[];for(let i=0;i<52;i++){const o=p;const delta=Math.sin(i*.71+seed)*.115+Math.cos(i*.19+seed)*.075;const c=o+delta;const h=Math.max(o,c)+.035+Math.abs(Math.sin(i+seed))*.08;const l=Math.min(o,c)-.035-Math.abs(Math.cos(i*.6))*.07;a.push({o,c,h,l});p=c;}return a;}
+function draw(){const a=series(selected),rect=canvas.getBoundingClientRect(),dpr=window.devicePixelRatio||1,w=Math.max(280,rect.width),h=rect.height;canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);const top=22,bottom=h-27,left=12,right=w-61;const lo=Math.min(...a.map(x=>x.l))-.08,hi=Math.max(...a.map(x=>x.h))+.08;const y=v=>top+(hi-v)/(hi-lo)*(bottom-top);ctx.font='11px system-ui';ctx.textAlign='left';for(let k=0;k<=4;k++){const val=lo+(hi-lo)*k/4,yy=y(val);ctx.strokeStyle='#2a3950';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(left,yy);ctx.lineTo(w-8,yy);ctx.stroke();ctx.fillStyle='#9aaec8';ctx.fillText(val.toFixed(3),right+7,yy+4);}const step=(right-left)/a.length;for(let i=0;i<a.length;i++){const x=left+(i+.5)*step,b=a[i],color=b.c>=b.o?'#5fe0a5':'#ff8490';ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=1.3;ctx.beginPath();ctx.moveTo(x,y(b.h));ctx.lineTo(x,y(b.l));ctx.stroke();const yy=Math.min(y(b.o),y(b.c)),bh=Math.max(1.5,Math.abs(y(b.o)-y(b.c)));ctx.fillRect(x-step*.32,yy,step*.64,bh);}const last=a[a.length-1].c;document.getElementById('price').textContent=last.toFixed(3);document.getElementById('summary').textContent=selected+'足 ・ 52本の架空ローソク足';document.getElementById('high').textContent=Math.max(...a.map(x=>x.h)).toFixed(3);document.getElementById('low').textContent=Math.min(...a.map(x=>x.l)).toFixed(3);}
+document.querySelectorAll('[data-tf]').forEach(btn=>btn.addEventListener('click',()=>{selected=btn.dataset.tf;document.querySelectorAll('[data-tf]').forEach(b=>b.classList.toggle('active',b===btn));draw();}));window.addEventListener('resize',draw);draw();
+</script>
+</body></html>
