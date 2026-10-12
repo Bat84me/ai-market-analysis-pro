@@ -29,7 +29,7 @@
 </div>
  
 <button id="fetchMarket" type="button">EUR/JPY 5分足を取得</button>
- document.getElementById('fetchMarket').onclick = () => document.getElementById('fetchMarket').textContent = 'ボタン動作OK';
+document.getElementById('fetchMarket').onclick = () => document.getElementById('fetchMarket').textContent = 'ボタン動作OK';
    
 document.getElementById('fetchMarket').addEventListener('click', async () => {
   const key = document.getElementById('apiKey').value.trim();
