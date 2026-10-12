@@ -27,7 +27,32 @@
   <input id="apiKey" type="password" placeholder="APIキーを入力" autocomplete="off">
   <p class="muted">APIキーはGitHubに保存しません。</p>
 </div>
-  <script>
+ 
+<button id="fetchMarket" type="button">EUR/JPY 5分足を取得</button>
+ <script>
+   
+document.getElementById('fetchMarket').addEventListener('click', async () => {
+  const key = document.getElementById('apiKey').value.trim();
+  if (!key) {
+    alert('APIキーを入力してください');
+    return;
+  }
+  try {
+    const url = 'https://api.twelvedata.com/time_series'
+      + '?symbol=EUR%2FJPY&interval=5min&outputsize=50'
+      + '&apikey=' + encodeURIComponent(key);
+    const response = await fetch(url);
+    const data = await response.json();
+    if (data.status === 'error' || !data.values) {
+      alert('取得エラー: ' + (data.message || 'データがありません'));
+      return;
+    }
+    alert('取得成功！ ローソク足 ' + data.values.length + '本');
+  } catch (error) {
+    alert('通信エラーが発生しました');
+  }
+});
+
 const canvas=document.getElementById('chart'),ctx=canvas.getContext('2d');let selected='5分';
 function series(tf){const seed=['5分','15分','30分','1時間','4時間','日足'].indexOf(tf)+1;let p=180.2+seed*.22;const a=[];for(let i=0;i<52;i++){const o=p;const delta=Math.sin(i*.71+seed)*.115+Math.cos(i*.19+seed)*.075;const c=o+delta;const h=Math.max(o,c)+.035+Math.abs(Math.sin(i+seed))*.08;const l=Math.min(o,c)-.035-Math.abs(Math.cos(i*.6))*.07;a.push({o,c,h,l});p=c;}return a;}
 function draw(){const a=series(selected),rect=canvas.getBoundingClientRect(),dpr=window.devicePixelRatio||1,w=Math.max(280,rect.width),h=rect.height;canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);const top=22,bottom=h-27,left=12,right=w-61;const lo=Math.min(...a.map(x=>x.l))-.08,hi=Math.max(...a.map(x=>x.h))+.08;const y=v=>top+(hi-v)/(hi-lo)*(bottom-top);ctx.font='11px system-ui';ctx.textAlign='left';for(let k=0;k<=4;k++){const val=lo+(hi-lo)*k/4,yy=y(val);ctx.strokeStyle='#2a3950';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(left,yy);ctx.lineTo(w-8,yy);ctx.stroke();ctx.fillStyle='#9aaec8';ctx.fillText(val.toFixed(3),right+7,yy+4);}const step=(right-left)/a.length;for(let i=0;i<a.length;i++){const x=left+(i+.5)*step,b=a[i],color=b.c>=b.o?'#5fe0a5':'#ff8490';ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=1.3;ctx.beginPath();ctx.moveTo(x,y(b.h));ctx.lineTo(x,y(b.l));ctx.stroke();const yy=Math.min(y(b.o),y(b.c)),bh=Math.max(1.5,Math.abs(y(b.o)-y(b.c)));ctx.fillRect(x-step*.32,yy,step*.64,bh);}const last=a[a.length-1].c;document.getElementById('price').textContent=last.toFixed(3);document.getElementById('summary').textContent=selected+'足 ・ 52本の架空ローソク足';document.getElementById('high').textContent=Math.max(...a.map(x=>x.h)).toFixed(3);document.getElementById('low').textContent=Math.min(...a.map(x=>x.l)).toFixed(3);}
